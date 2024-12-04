@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"
+        integrity="sha512-k37wQcV4v2h6jgYf5IUz1MoSKPpDs630XGSmCaCCOXxy2awgAWKHGZWr9nMyGgk3IOxA1NxdkN8r1JHgkUtMoQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="./data.js"></script>
+    <style>
+        #echart {
+            width: 1200px;
+            height: 500px;
+            background-color: rgba(0, 0, 0, 1);
+            margin: 0 auto;
+            margin-top: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="echart"></div>
+
+    <script>
+        console.error(echarts) // 确保 echarts 引入
+
+        const dom = document.querySelector('#echart')
+        const myChart = echarts.init(dom);
+        const mapWidth = myChart.getWidth(), mapHeight = myChart.getHeight();
+
+        const handleHeatData = data.map(a => {
+            return [parseFloat(a.x), parseFloat(a.y), a.count, a.count];
+        });
+
+        const svgXML = `
+            <svg width="${mapWidth}" height="${mapHeight}">
+                <rect x="0" y="0" width="${mapWidth}" height="${mapHeight}" fill="rgba(255,255,255,0)"/>
+            </svg>
+        `;
+        echarts.registerMap('mymap', {
+            svg: svgXML
+        });
+
+        const testMapImage = './1.png'
+
+        /* 配置项
+         * 1、geo组件：渲染已注册地图
+         * 2、series.custom图表：渲染自定义的图片地图
+         * 3、visualMap组件和series.heatmap图表：渲染热力图
+         */
+        const option = {
+            geo: {
+                map: 'mymap',
+                roam: false,
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+            },
+            visualMap: {
+                type: 'continuous',
+                calculable: true,
+                realtime: false,
+                show: true,
+                textStyle: {
+                    color: '#fff'
+                },
+                text: ['活力值'],
+                formatter: (value) => {
+                    return value.toFixed(0) + '人次';
+                },
+                min: 0,
+                orient: 'vertical',
+                algin: 'bottom',
+                handleStyle: {
+                    borderColor: 'transparent'
+                },
+                max: 10,
+                inRange: {
+                    color: ['#2A2F2A', '#00ff26', '#FFF000', '#FF5C00'],
+
+                }
+            },
+            series: [
+                {
+                    type: 'custom',
+                    name: '自定义图片地图',
+                    coordinateSystem: 'geo',
+                    animation: false,
+                    renderItem(params, api) {
+                        const pos = api.coord([params.coordSys.x, params.coordSys.y]);
+                        const size = api.size([params.coordSys.width, params.coordSys.height]);
+
+                        const temp = {
+                            type: 'image',
+                            style: {
+                                image: testMapImage,
+                                x: pos[0],
+                                y: pos[1],
+                                color: 'red',
+                                shadowColor: 'transparent',
+                                borderWidth: 0,
+                            }
+                        };
+                        return temp;
+                    },
+                    data: [0]
+                },
+                {
+                    type: 'heatmap',
+                    name: '热力图',
+                    coordinateSystem: 'geo',
+                    pointSize: 10,
+                    blurSize: 10,
+                    zlevel: 10,
+                    animation: false,
+                    itemStyle: {
+
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    },
+
+                    data: handleHeatData
+                }
+            ]
+        };
+        myChart.setOption(option)
+    </script>
+</body>
+
+</html>
